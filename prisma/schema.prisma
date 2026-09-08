@@ -1,0 +1,161 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  ADMIN
+  DOKTER
+  PETUGAS_PENDAFTARAN
+}
+
+enum Gender {
+  L
+  P
+}
+
+enum PaymentType {
+  UMUM
+  BPJS
+  ASURANSI
+}
+
+enum RegistrationStatus {
+  MENUNGGU
+  CHECK_IN
+  PEMERIKSAAN
+  SELESAI
+}
+
+enum QueueStatus {
+  WAITING
+  CALLED
+  IN_PROGRESS
+  DONE
+  SKIPPED
+}
+
+model User {
+  id           String   @id @default(uuid())
+  name         String
+  email        String   @unique
+  passwordHash String
+  role         Role
+  isActive     Boolean  @default(true)
+  doctor       Doctor?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+
+model Doctor {
+  id             String          @id @default(uuid())
+  userId         String          @unique
+  user           User            @relation(fields: [userId], references: [id])
+  poliId         String
+  poli           Poli            @relation(fields: [poliId], references: [id])
+  sipNumber      String?
+  specialization String?
+  registrations  Registration[]
+  medicalRecords MedicalRecord[]
+}
+
+model Poli {
+  id            String         @id @default(uuid())
+  name          String
+  code          String         @unique
+  doctors       Doctor[]
+  registrations Registration[]
+}
+
+model Patient {
+  id             String          @id @default(uuid())
+  noRm           String          @unique
+  nik            String          @unique
+  name           String
+  gender         Gender
+  birthDate      DateTime
+  phone          String
+  address        String
+  isActive       Boolean         @default(true)
+  registrations  Registration[]
+  medicalRecords MedicalRecord[]
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+}
+
+model Registration {
+  id             String             @id @default(uuid())
+  patientId      String
+  patient        Patient            @relation(fields: [patientId], references: [id])
+  doctorId       String
+  doctor         Doctor             @relation(fields: [doctorId], references: [id])
+  poliId         String
+  poli           Poli               @relation(fields: [poliId], references: [id])
+  visitDate      DateTime
+  paymentType    PaymentType
+  chiefComplaint String
+  status         RegistrationStatus @default(MENUNGGU)
+  createdBy      String
+  queue          Queue?
+  medicalRecord  MedicalRecord?
+  createdAt      DateTime           @default(now())
+}
+
+model Queue {
+  id             String       @id @default(uuid())
+  registrationId String       @unique
+  registration   Registration @relation(fields: [registrationId], references: [id])
+  queueNumber    String
+  queueDate      DateTime     @default(now())
+  status         QueueStatus  @default(WAITING)
+  calledAt       DateTime?
+}
+
+model MedicalRecord {
+  id             String          @id @default(uuid())
+  registrationId String          @unique
+  registration   Registration    @relation(fields: [registrationId], references: [id])
+  patientId      String
+  patient        Patient         @relation(fields: [patientId], references: [id])
+  doctorId       String
+  doctor         Doctor          @relation(fields: [doctorId], references: [id])
+  subjective     String
+  bloodPressure  String
+  temperature    Float
+  weight         Float
+  height         Float
+  diagnosis      String
+  therapyPlan    String
+  actions        MedicalAction[]
+  prescription   Prescription?
+  createdAt      DateTime        @default(now())
+}
+
+model MedicalAction {
+  id              String        @id @default(uuid())
+  medicalRecordId String
+  medicalRecord   MedicalRecord @relation(fields: [medicalRecordId], references: [id])
+  actionName      String
+  notes           String?
+}
+
+model Prescription {
+  id              String             @id @default(uuid())
+  medicalRecordId String             @unique
+  medicalRecord   MedicalRecord      @relation(fields: [medicalRecordId], references: [id])
+  items           PrescriptionItem[]
+}
+
+model PrescriptionItem {
+  id             String       @id @default(uuid())
+  prescriptionId String
+  prescription   Prescription @relation(fields: [prescriptionId], references: [id])
+  medicineName   String
+  dosage         String
+  quantity       Int
+  instructions   String?
+}
