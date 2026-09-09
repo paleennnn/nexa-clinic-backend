@@ -28,13 +28,13 @@ cp .env.example .env
 # lalu edit .env, sesuaikan DATABASE_URL
 
 # 3. Buat database
-createdb nexa_clinic
-# atau lewat psql: CREATE DATABASE nexa_clinic;
+createdb db-nexaclinic
+# atau lewat psql: CREATE DATABASE "db-nexaclinic";
 
 # 4. Jalankan migrasi
 npx prisma migrate dev --name init
 
-# 5. Jalankan seeder
+# 5. Jalankan seeder (membuat akun default, poli, dokter, dan 15 data pasien demo)
 npx prisma db seed
 
 # 6. Jalankan server
@@ -45,9 +45,9 @@ Server berjalan di `http://localhost:4000` (atau sesuai `PORT` di `.env`).
 
 ## Konfigurasi `.env`
 
-```
+```env
 PORT=4000
-DATABASE_URL="postgresql://user:password@localhost:5432/nexa_clinic"
+DATABASE_URL="postgresql://postgres:password@localhost:5432/db-nexaclinic?schema=public"
 JWT_SECRET=change_this_secret
 JWT_EXPIRES_IN=8h
 ```
@@ -60,13 +60,21 @@ Setiap kali `prisma/schema.prisma` berubah:
 npx prisma migrate dev --name <nama_perubahan>
 ```
 
-Untuk apply migrasi yang sudah ada tanpa membuat migrasi baru (mis. di server lain):
+Untuk apply migrasi yang sudah ada tanpa membuat migrasi baru:
 
 ```bash
 npx prisma migrate deploy
 ```
 
-## Akun Default (dari seed)
+Untuk reset ulang database dari awal sekaligus menjalankan seeder data:
+
+```bash
+npx prisma migrate reset
+```
+
+## Akun Default & Data Demo (dari seed)
+
+### Akun Pengguna
 
 | Role | Email | Password |
 |---|---|---|
@@ -76,13 +84,16 @@ npx prisma migrate deploy
 
 Password di atas plaintext hanya untuk keperluan login demo, di database tersimpan sudah di-hash (bcrypt).
 
+### Data Pasien Demo
+Seeder juga otomatis menambahkan **15 data pasien demo** (`RM-000001` s/d `RM-000015`) lengkap dengan data NIK, nomor telepon, tanggal lahir, dan alamat.
+
 ## Struktur Project
 
 ```
 nexa-clinic-backend/
 ├── prisma/
 │   ├── schema.prisma        # 5 enum, 10 model, relasi lengkap
-│   └── seed.js               # akun default + 1 poli
+│   └── seed.js               # akun default, poli, dokter, dan 15 data pasien demo
 ├── src/
 │   ├── app.js                 # entry point express
 │   ├── config/
