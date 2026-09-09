@@ -7,6 +7,7 @@ const registrationRoutes = require('./registration.routes');
 const queueRoutes = require('./queue.routes');
 const medicalRecordRoutes = require('./medicalRecord.routes');
 const prescriptionRoutes = require('./prescription.routes');
+const dashboardRoutes = require('./dashboard.routes');
 
 const router = Router();
 
@@ -18,5 +19,6 @@ router.use('/registrations', registrationRoutes);
 router.use('/queues', queueRoutes);
 router.use('/medical-records', medicalRecordRoutes);
 router.use('/prescriptions', prescriptionRoutes);
+router.use('/dashboard', dashboardRoutes);
 
 module.exports = router;
