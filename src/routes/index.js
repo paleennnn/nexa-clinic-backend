@@ -1,11 +1,10 @@
 const { Router } = require('express');
 const authRoutes = require('./auth.routes');
+const patientRoutes = require('./patient.routes');
 
 const router = Router();
 
 router.use('/auth', authRoutes);
-
-// Modul lain (patients, poli, doctors, registrations, queues, medical-records,
-// prescriptions, dashboard) akan didaftarkan di sini pada fase berikutnya.
+router.use('/patients', patientRoutes);
 
 module.exports = router;

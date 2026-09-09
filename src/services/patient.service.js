@@ -36,12 +36,12 @@ const listPatients = async ({ search, page = 1, limit = 10 }) => {
     isActive: true,
     ...(search
       ? {
-          OR: [
-            { name: { contains: search, mode: 'insensitive' } },
-            { nik: { contains: search } },
-            { noRm: { contains: search, mode: 'insensitive' } },
-          ],
-        }
+        OR: [
+          { name: { contains: search, mode: 'insensitive' } },
+          { nik: { contains: search } },
+          { noRm: { contains: search, mode: 'insensitive' } },
+        ],
+      }
       : {}),
   };
 
@@ -81,7 +81,7 @@ const updatePatient = async (id, data) => {
 
 const deletePatient = async (id) => {
   await getPatientById(id);
-  // Soft delete (PRD §9.5): jaga relasi historis registrasi/rekam medis tetap utuh
+  // Soft delete: jaga relasi historis registrasi/rekam medis tetap utuh
   return prisma.patient.update({ where: { id }, data: { isActive: false } });
 };
 

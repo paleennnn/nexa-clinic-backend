@@ -24,7 +24,6 @@ app.get('/', (req, res) => {
 
 app.use('/api', routes);
 
-// WAJIB paling akhir, urutannya: notFound dulu baru errorHandler
 app.use(notFound);
 app.use(errorHandler);
 
