@@ -5,6 +5,7 @@ const poliRoutes = require('./poli.routes');
 const doctorRoutes = require('./doctor.routes');
 const registrationRoutes = require('./registration.routes');
 const queueRoutes = require('./queue.routes');
+const medicalRecordRoutes = require('./medicalRecord.routes');
 
 const router = Router();
 
@@ -14,5 +15,6 @@ router.use('/poli', poliRoutes);
 router.use('/doctors', doctorRoutes);
 router.use('/registrations', registrationRoutes);
 router.use('/queues', queueRoutes);
+router.use('/medical-records', medicalRecordRoutes);
 
 module.exports = router;
