@@ -8,7 +8,7 @@ const login = async (req, res) => {
 };
 
 const logout = async (req, res) => {
-  // Stateless JWT (sesuai PRD §6.1): tidak ada state di server, client cukup hapus token.
+  // Stateless JWT: tidak ada state di server, client cukup hapus token.
   return success(res, {}, 'Logout berhasil');
 };
 
