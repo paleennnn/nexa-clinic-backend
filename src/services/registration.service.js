@@ -84,7 +84,25 @@ const updateRegistration = async (id, data, actingRole) => {
     }
   }
 
-  return prisma.registration.update({ where: { id }, data, include: registrationInclude });
+  return prisma.$transaction(async (tx) => {
+    const updated = await tx.registration.update({ where: { id }, data, include: registrationInclude });
+
+    if (data.status && registration.queue) {
+      if (data.status === 'PEMERIKSAAN' && ['WAITING', 'CALLED'].includes(registration.queue.status)) {
+        await tx.queue.update({
+          where: { id: registration.queue.id },
+          data: { status: 'IN_PROGRESS' },
+        });
+      } else if (data.status === 'SELESAI' && registration.queue.status !== 'DONE') {
+        await tx.queue.update({
+          where: { id: registration.queue.id },
+          data: { status: 'DONE' },
+        });
+      }
+    }
+
+    return updated;
+  });
 };
 
 module.exports = { createRegistration, listRegistrations, getRegistrationById, updateRegistration };

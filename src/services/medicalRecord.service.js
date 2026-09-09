@@ -94,4 +94,79 @@ const getMedicalRecordsByPatient = async (patientId) => {
   });
 };
 
-module.exports = { createMedicalRecord, getMedicalRecordsByPatient };
+const listMedicalRecords = async (query, user) => {
+  const { search, date, poliId, page = 1, limit = 10 } = query;
+  const pageNum = Number(page) || 1;
+  const limitNum = Number(limit) || 10;
+  const skip = (pageNum - 1) * limitNum;
+
+  const where = {};
+
+  // Role scoping: if user is DOKTER, limit to their own doctor profile
+  if (user.role === 'DOKTER') {
+    const doctor = await prisma.doctor.findUnique({ where: { userId: user.id } });
+    if (!doctor) {
+      throw new AppError('Profil dokter tidak ditemukan', 403);
+    }
+    where.doctorId = doctor.id;
+  } else if (poliId) {
+    where.doctor = { poliId };
+  }
+
+  if (date) {
+    const start = new Date(date);
+    start.setHours(0, 0, 0, 0);
+    const end = new Date(date);
+    end.setHours(23, 59, 59, 999);
+    where.createdAt = { gte: start, lte: end };
+  }
+
+  if (search) {
+    where.OR = [
+      { patient: { name: { contains: search, mode: 'insensitive' } } },
+      { patient: { noRm: { contains: search, mode: 'insensitive' } } },
+      { diagnosis: { contains: search, mode: 'insensitive' } },
+    ];
+  }
+
+  const [total, items] = await Promise.all([
+    prisma.medicalRecord.count({ where }),
+    prisma.medicalRecord.findMany({
+      where,
+      skip,
+      take: limitNum,
+      orderBy: { createdAt: 'desc' },
+      include: {
+        patient: true,
+        doctor: {
+          include: {
+            user: { select: { id: true, name: true } },
+            poli: true,
+          },
+        },
+        registration: {
+          include: {
+            poli: true,
+            queue: true,
+          },
+        },
+        actions: true,
+        prescription: {
+          include: { items: true },
+        },
+      },
+    }),
+  ]);
+
+  return {
+    items,
+    pagination: {
+      page: pageNum,
+      limit: limitNum,
+      total,
+      totalPages: Math.max(Math.ceil(total / limitNum), 1),
+    },
+  };
+};
+
+module.exports = { createMedicalRecord, getMedicalRecordsByPatient, listMedicalRecords };

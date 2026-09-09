@@ -11,4 +11,9 @@ const historyByPatient = async (req, res) => {
   return success(res, records, 'OK');
 };
 
-module.exports = { create, historyByPatient };
+const list = async (req, res) => {
+  const result = await medicalRecordService.listMedicalRecords(req.query, req.user);
+  return success(res, result, 'OK');
+};
+
+module.exports = { create, historyByPatient, list };

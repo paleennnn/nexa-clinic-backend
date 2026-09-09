@@ -29,4 +29,12 @@ const patientIdParamSchema = z.object({
   patientId: z.string().uuid('patientId tidak valid'),
 });
 
-module.exports = { createMedicalRecordSchema, patientIdParamSchema };
+const listMedicalRecordQuerySchema = z.object({
+  search: z.string().optional(),
+  date: z.string().optional(),
+  poliId: z.string().uuid('poliId tidak valid').optional(),
+  page: z.coerce.number().int().positive().optional().default(1),
+  limit: z.coerce.number().int().positive().max(100).optional().default(10),
+});
+
+module.exports = { createMedicalRecordSchema, patientIdParamSchema, listMedicalRecordQuerySchema };

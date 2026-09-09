@@ -85,15 +85,45 @@ const callQueue = async (id) => {
     throw new AppError('Masih ada antrean lain yang sedang dipanggil di poli ini', 409);
   }
 
-  return prisma.queue.update({
-    where: { id },
-    data: { status: 'CALLED', calledAt: new Date() },
+  return prisma.$transaction(async (tx) => {
+    const updated = await tx.queue.update({
+      where: { id },
+      data: { status: 'CALLED', calledAt: new Date() },
+    });
+
+    if (queue.registration && queue.registration.status === 'MENUNGGU') {
+      await tx.registration.update({
+        where: { id: queue.registrationId },
+        data: { status: 'CHECK_IN' },
+      });
+    }
+
+    return updated;
   });
 };
 
 const updateQueueStatus = async (id, status) => {
-  await getQueueById(id);
-  return prisma.queue.update({ where: { id }, data: { status } });
+  const queue = await getQueueById(id);
+
+  return prisma.$transaction(async (tx) => {
+    const updated = await tx.queue.update({ where: { id }, data: { status } });
+
+    if (queue.registration) {
+      if (status === 'IN_PROGRESS' && ['MENUNGGU', 'CHECK_IN'].includes(queue.registration.status)) {
+        await tx.registration.update({
+          where: { id: queue.registrationId },
+          data: { status: 'PEMERIKSAAN' },
+        });
+      } else if (status === 'DONE' && queue.registration.status !== 'SELESAI') {
+        await tx.registration.update({
+          where: { id: queue.registrationId },
+          data: { status: 'SELESAI' },
+        });
+      }
+    }
+
+    return updated;
+  });
 };
 
 module.exports = {
